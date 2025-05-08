@@ -1,0 +1,479 @@
+{
+    "dns": {
+      "fakeip": {
+        "enabled": true,
+        "inet4_range": "198.18.0.0/15",
+        "inet6_range": "fc00::/18"
+      },
+      "servers": [
+        {
+          "tag": "google",
+          "address": "https://8.8.8.8/dns-query",
+          "detour": "proxy"
+        },
+        {
+          "tag": "ali",
+          "address": "https://223.5.5.5/dns-query",
+          "detour": "direct"
+        },
+        {
+          "tag": "fakeip",
+          "address": "fakeip"
+        }
+      ],
+      "rules": [
+        {
+          "outbound": "any",
+          "action": "route",
+          "server": "ali",
+          "disable_cache": true
+        },
+        {
+          "clash_mode": "Direct",
+          "action": "route",
+          "server": "ali"
+        },
+        {
+          "clash_mode": "Global",
+          "action": "route",
+          "server": "fakeip"
+        },
+        {
+          "query_type": "HTTPS",
+          "action": "reject"
+        },
+        {
+          "query_type": [
+            "A",
+            "AAAA"
+          ],
+          "action": "route",
+          "server": "fakeip",
+          "rewrite_ttl": 1
+        },
+        {
+          "rule_set": "cn_domain",
+          "action": "route",
+          "server": "ali"
+        }
+      ],
+      "final": "google",
+      "independent_cache": true
+    },
+    "route": {
+      "rules": [
+        {
+          "action": "sniff",
+          "sniffer": [
+            "http",
+            "tls",
+            "quic",
+            "dns"
+          ],
+          "timeout": "500ms"
+        },
+        {
+          "type": "logical",
+          "mode": "or",
+          "rules": [
+            {
+              "port": 53
+            },
+            {
+              "protocol": "dns"
+            }
+          ],
+          "action": "hijack-dns"
+        },
+        {
+          "ip_is_private": true,
+          "action": "route",
+          "outbound": "direct"
+        },
+        {
+            "rule_set": "googlefcm_domain",
+            "action": "route",
+            "outbound": "direct"
+        },
+        {
+          "clash_mode": "Global",
+          "action": "route",
+          "outbound": "GLOBAL"
+        },
+        {
+          "clash_mode": "Direct",
+          "action": "route",
+          "outbound": "direct"
+        },
+        {
+          "rule_set": "bilibili_domain",
+          "action": "route",
+          "outbound": "港台番剧"
+        },
+        {
+          "rule_set": "ai_domain",
+          "action": "route",
+          "outbound": "AI服务"
+        },
+        {
+          "type": "logical",
+          "mode": "and",
+          "rules": [
+            {
+              "rule_set": "proxy_domain"
+            },
+            {
+              "invert": true,
+              "rule_set": [
+                "cn_domain",
+                "apple_domain"
+              ]
+            }
+          ],
+          "action": "route",
+          "outbound": "proxy"
+        },
+        {
+          "action": "resolve"
+        },
+        {
+          "rule_set": [
+            "apple_ip",
+            "apple_domain"
+          ],
+          "action": "route",
+          "outbound": "苹果服务"
+        },
+        {
+          "rule_set": [
+            "cn_ip",
+            "cn_domain"
+          ],
+          "action": "route",
+          "outbound": "国内网站"
+        }
+      ],
+      "rule_set": [
+        {
+          "tag": "apple_ip",
+          "type": "remote",
+          "format": "binary",
+          "url": "https://ghfast.top/https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/sing/geo-lite/geoip/apple.srs",
+          "download_detour": "direct"
+        },
+        {
+          "tag": "apple_domain",
+          "type": "remote",
+          "format": "binary",
+          "url": "https://ghfast.top/https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/sing/geo-lite/geosite/apple.srs",
+          "download_detour": "direct"
+        },
+        {
+          "tag": "bilibili_domain",
+          "type": "remote",
+          "format": "binary",
+          "url": "https://ghfast.top/https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/sing/geo-lite/geosite/bilibili.srs",
+          "download_detour": "direct"
+        },
+        {
+          "tag": "cn_ip",
+          "type": "remote",
+          "format": "binary",
+          "url": "https://ghfast.top/https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/sing/geo/geoip/cn.srs",
+          "download_detour": "direct"
+        },
+        {
+          "tag": "cn_domain",
+          "type": "remote",
+          "format": "binary",
+          "url": "https://ghfast.top/https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/sing/geo-lite/geosite/cn.srs",
+          "download_detour": "direct"
+        },
+        {
+          "tag": "googlefcm_domain",
+          "type": "remote",
+          "format": "binary",
+          "url": "https://ghfast.top/https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/sing/geo/geosite/googlefcm.srs",
+          "download_detour": "direct"
+        },
+        {
+          "tag": "ai_domain",
+          "type": "remote",
+          "format": "binary",
+          "url": "https://ghfast.top/https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/sing/geo/geosite/category-ai-!cn.srs",
+          "download_detour": "direct"
+        },
+        {
+          "tag": "proxy_domain",
+          "type": "remote",
+          "format": "binary",
+          "url": "https://ghfast.top/https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/sing/geo/geosite/geolocation-!cn.srs",
+          "download_detour": "direct"
+        }
+      ],
+      "final": "黑白名单",
+      "auto_detect_interface": true
+    },
+    "outbounds": [
+      {
+        "tag": "proxy",
+        "type": "selector",
+        "outbounds": [
+          "hk",
+          "hk-auto",
+          "tw",
+          "tw-auto",
+          "jp",
+          "jp-auto",
+          "sg",
+          "sg-auto",
+          "us",
+          "us-auto",
+          "all",
+          "all-auto",
+          "direct"
+        ],
+        "default": "all-auto"
+      },
+      {
+        "tag": "苹果服务",
+        "type": "selector",
+        "outbounds": [
+          "proxy",
+          "direct",
+          "hk",
+          "hk-auto",
+          "tw",
+          "tw-auto",
+          "jp",
+          "jp-auto",
+          "sg",
+          "sg-auto",
+          "us",
+          "us-auto",
+          "all",
+          "all-auto"
+        ],
+        "default": "direct"
+      },
+      {
+        "tag": "港台番剧",
+        "type": "selector",
+        "outbounds": [
+          "proxy",
+          "direct",
+          "hk",
+          "hk-auto",
+          "tw",
+          "tw-auto"
+        ],
+        "default": "direct"
+      },
+      {
+        "tag": "AI服务",
+        "type": "selector",
+        "outbounds": [
+          "proxy",
+          "direct",
+          "hk",
+          "hk-auto",
+          "tw",
+          "tw-auto",
+          "jp",
+          "jp-auto",
+          "sg",
+          "sg-auto",
+          "us",
+          "us-auto",
+          "all",
+          "all-auto"
+        ],
+        "default": "proxy"
+      },
+      {
+        "tag": "国内网站",
+        "type": "selector",
+        "outbounds": [
+          "proxy",
+          "direct",
+          "hk",
+          "hk-auto",
+          "tw",
+          "tw-auto",
+          "jp",
+          "jp-auto",
+          "sg",
+          "sg-auto",
+          "us",
+          "us-auto",
+          "all",
+          "all-auto"
+        ],
+        "default": "direct"
+      },
+      {
+        "tag": "黑白名单",
+        "type": "selector",
+        "outbounds": [
+          "proxy",
+          "direct",
+          "hk",
+          "hk-auto",
+          "tw",
+          "tw-auto",
+          "jp",
+          "jp-auto",
+          "sg",
+          "sg-auto",
+          "us",
+          "us-auto",
+          "all",
+          "all-auto"
+        ],
+        "default": "proxy"
+      },
+      {
+        "tag": "hk",
+        "type": "selector",
+        "outbounds": []
+      },
+      {
+        "tag": "tw",
+        "type": "selector",
+        "outbounds": []
+      },
+      {
+        "tag": "jp",
+        "type": "selector",
+        "outbounds": []
+      },
+      {
+        "tag": "sg",
+        "type": "selector",
+        "outbounds": []
+      },
+      {
+        "tag": "us",
+        "type": "selector",
+        "outbounds": []
+      },
+      {
+        "tag": "all",
+        "type": "selector",
+        "outbounds": []
+      },
+      {
+        "tag": "hk-auto",
+        "type": "urltest",
+        "outbounds": [],
+        "url": "https://www.gstatic.com/generate_204",
+        "interval": "1m",
+        "tolerance": 50
+      },
+      {
+        "tag": "tw-auto",
+        "type": "urltest",
+        "outbounds": [],
+        "url": "https://www.gstatic.com/generate_204",
+        "interval": "1m",
+        "tolerance": 50
+      },
+      {
+        "tag": "jp-auto",
+        "type": "urltest",
+        "outbounds": [],
+        "url": "https://www.gstatic.com/generate_204",
+        "interval": "1m",
+        "tolerance": 50
+      },
+      {
+        "tag": "sg-auto",
+        "type": "urltest",
+        "outbounds": [],
+        "url": "https://www.gstatic.com/generate_204",
+        "interval": "1m",
+        "tolerance": 50
+      },
+      {
+        "tag": "us-auto",
+        "type": "urltest",
+        "outbounds": [],
+        "url": "https://www.gstatic.com/generate_204",
+        "interval": "1m",
+        "tolerance": 50
+      },
+      {
+        "tag": "all-auto",
+        "type": "urltest",
+        "outbounds": [],
+        "url": "https://www.gstatic.com/generate_204",
+        "interval": "1m",
+        "tolerance": 50
+      },
+      {
+        "tag": "GLOBAL",
+        "type": "selector",
+        "outbounds": [
+          "direct",
+          "proxy",
+          "hk",
+          "hk-auto",
+          "tw",
+          "tw-auto",
+          "jp",
+          "jp-auto",
+          "sg",
+          "sg-auto",
+          "us",
+          "us-auto",
+          "all",
+          "all-auto"
+        ],
+        "default": "direct"
+      },
+      {
+        "tag": "direct",
+        "type": "direct"
+      }
+    ],
+    "inbounds": [
+      {
+        "type": "tun",
+        "address": [
+          "172.19.0.0/30",
+          "fdfe:dcba:9876::0/126"
+        ],
+        "stack": "mixed",
+        "auto_route": true,
+        "platform": {
+          "http_proxy": {
+            "enabled": true,
+            "server": "127.0.0.1",
+            "server_port": 2080
+          }
+        }
+      },
+      {
+        "type": "mixed",
+        "listen": "127.0.0.1",
+        "listen_port": 2080
+      }
+    ],
+    "experimental": {
+      "clash_api": {
+        "external_controller": "127.0.0.1:9090",
+        "external_ui": "ui",
+        "external_ui_download_url": "https://ghfast.top/https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip",
+        "external_ui_download_detour": "direct"
+      },
+      "cache_file": {
+        "enabled": true,
+        "store_fakeip": true
+      }
+    },
+    "log": {
+      "disabled": false,
+      "level": "info",
+      "timestamp": true
+    }
+  }
